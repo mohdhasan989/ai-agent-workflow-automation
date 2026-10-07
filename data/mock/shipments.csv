@@ -1,0 +1,4 @@
+shipment_id,shipment_status,tracking_number
+SHP-001,delivered,TRACK-9F8Z7Q
+SHP-002,in transit,TRACK-3A2B1C
+SHP-003,label created,

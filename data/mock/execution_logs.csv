@@ -1,0 +1,13 @@
+workflow_id,status,execution_time_s,slowest_step,error
+WF001,success,3.2,Load inventory,
+WF001,success,2.8,Load inventory,
+WF001,success,3.0,Load inventory,
+WF002,success,14.0,compare internal and vendor prices,
+WF002,failure,16.5,compare internal and vendor prices,TimeoutError
+WF002,failure,15.2,compare internal and vendor prices,TimeoutError
+WF003,success,5.5,Read file,
+WF003,success,6.1,detect columns,
+WF003,failure,12.0,normalize column names,EncodingError
+WF004,success,11.0,generate SEO title,
+WF004,success,10.5,create product description,
+WF004,success,11.2,create product description,

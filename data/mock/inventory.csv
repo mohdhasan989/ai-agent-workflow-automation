@@ -1,0 +1,5 @@
+sku,name,stock,min_stock
+SKU-101,Widget,5,10
+SKU-102,Gadget,20,10
+SKU-103,Gizmo,8,10
+SKU-104,Doodad,15,10

@@ -1,0 +1,1132 @@
+{
+  "bindings": [
+    {
+      "workflow_id": "WF001",
+      "step": "Load inventory",
+      "tool": "read_csv",
+      "params": {
+        "kwargs": {
+          "path": "data/mock/inventory.csv"
+        }
+      },
+      "output": "inventory"
+    },
+    {
+      "workflow_id": "WF001",
+      "step": "compare current stock with minimum threshold",
+      "tool": "transform_rows",
+      "params": {
+        "args": [
+          "$inventory",
+          "stock_diff",
+          "subtract",
+          [
+            "stock",
+            "min_stock"
+          ]
+        ]
+      },
+      "output": "compared"
+    },
+    {
+      "workflow_id": "WF001",
+      "step": "identify low-stock products",
+      "tool": "filter_rows",
+      "params": {
+        "args": [
+          "$compared",
+          "stock_diff",
+          "lt",
+          0
+        ]
+      },
+      "output": "low_stock"
+    },
+    {
+      "workflow_id": "WF001",
+      "step": "calculate reorder quantity",
+      "tool": "transform_rows",
+      "params": {
+        "args": [
+          "$low_stock",
+          "reorder_qty",
+          "subtract",
+          [
+            "min_stock",
+            "stock"
+          ]
+        ]
+      },
+      "output": "restock_ready"
+    },
+    {
+      "workflow_id": "WF001",
+      "step": "generate restock list",
+      "tool": "select_columns",
+      "params": {
+        "args": [
+          "$restock_ready",
+          [
+            "sku",
+            "name",
+            "stock",
+            "min_stock",
+            "reorder_qty"
+          ]
+        ]
+      },
+      "output": "restock_list"
+    },
+    {
+      "workflow_id": "WF002",
+      "step": "Load product prices",
+      "tool": "read_csv",
+      "params": {
+        "kwargs": {
+          "path": "data/mock/products.csv"
+        }
+      },
+      "output": "products"
+    },
+    {
+      "workflow_id": "WF002",
+      "step": "match products by SKU",
+      "tool": "join_rows",
+      "params": {
+        "args": [
+          "$products",
+          "data/mock/vendor_prices.csv",
+          "sku",
+          "sku"
+        ]
+      },
+      "output": "matched"
+    },
+    {
+      "workflow_id": "WF002",
+      "step": "compare internal and vendor prices",
+      "tool": "transform_rows",
+      "params": {
+        "args": [
+          "$matched",
+          "price_diff",
+          "subtract",
+          [
+            "internal_price",
+            "vendor_price"
+          ]
+        ]
+      },
+      "output": "compared"
+    },
+    {
+      "workflow_id": "WF002",
+      "step": "calculate percentage difference",
+      "tool": "transform_rows",
+      "params": {
+        "args": [
+          "$compared",
+          "pct_diff",
+          "pct_diff",
+          [
+            "internal_price",
+            "vendor_price"
+          ]
+        ]
+      },
+      "output": "with_diffs"
+    },
+    {
+      "workflow_id": "WF002",
+      "step": "flag exceptions",
+      "tool": "filter_rows",
+      "params": {
+        "args": [
+          "$with_diffs",
+          "pct_diff",
+          "outside",
+          10
+        ]
+      },
+      "output": "exceptions"
+    },
+    {
+      "workflow_id": "WF003",
+      "step": "Read file",
+      "tool": "read_table",
+      "params": {
+        "kwargs": {
+          "path": "data/mock/vendor_products.csv"
+        }
+      },
+      "output": "raw"
+    },
+    {
+      "workflow_id": "WF003",
+      "step": "detect columns",
+      "tool": "detect_columns",
+      "params": {
+        "args": [
+          "$raw"
+        ]
+      },
+      "output": "columns"
+    },
+    {
+      "workflow_id": "WF003",
+      "step": "normalize column names",
+      "tool": "normalize_columns",
+      "params": {
+        "args": [
+          "$raw"
+        ],
+        "kwargs": {
+          "rename": {
+            "SKU Code": "sku",
+            "Product Name": "name"
+          }
+        }
+      },
+      "output": "rows"
+    },
+    {
+      "workflow_id": "WF003",
+      "step": "validate required fields",
+      "tool": "validate_required",
+      "params": {
+        "args": [
+          "$rows"
+        ],
+        "kwargs": {
+          "required_fields": [
+            "sku",
+            "name"
+          ]
+        }
+      },
+      "output": "validation"
+    },
+    {
+      "workflow_id": "WF003",
+      "step": "identify invalid rows",
+      "tool": "partition_rows",
+      "params": {
+        "args": [
+          "$rows"
+        ],
+        "kwargs": {
+          "required_fields": [
+            "sku",
+            "name"
+          ]
+        }
+      },
+      "output": "partition"
+    },
+    {
+      "workflow_id": "WF003",
+      "step": "produce cleaned dataset",
+      "tool": "partition_rows",
+      "params": {
+        "args": [
+          "$rows"
+        ],
+        "kwargs": {
+          "required_fields": [
+            "sku",
+            "name"
+          ]
+        }
+      },
+      "output": "cleaned_dataset"
+    },
+    {
+      "workflow_id": "WF006",
+      "step": "Load products",
+      "tool": "read_csv",
+      "params": {
+        "kwargs": {
+          "path": "data/mock/products_duplicates.csv"
+        }
+      },
+      "output": "catalog"
+    },
+    {
+      "workflow_id": "WF006",
+      "step": "normalize names/SKUs",
+      "tool": "normalize_fields",
+      "params": {
+        "args": [
+          "$catalog"
+        ],
+        "kwargs": {
+          "fields": [
+            "sku",
+            "name",
+            "category",
+            "brand",
+            "color"
+          ]
+        }
+      },
+      "output": "normalized"
+    },
+    {
+      "workflow_id": "WF006",
+      "step": "compare identifiers",
+      "tool": "find_duplicates",
+      "params": {
+        "args": [
+          "$normalized"
+        ],
+        "kwargs": {
+          "key_fields": [
+            "sku"
+          ],
+          "similarity_fields": [
+            "name",
+            "category",
+            "brand",
+            "color"
+          ],
+          "threshold": 0.7
+        }
+      },
+      "output": "identifier_result"
+    },
+    {
+      "workflow_id": "WF006",
+      "step": "compare product attributes",
+      "tool": "find_duplicates",
+      "params": {
+        "args": [
+          "$normalized"
+        ],
+        "kwargs": {
+          "key_fields": [
+            "sku"
+          ],
+          "similarity_fields": [
+            "name",
+            "category",
+            "brand",
+            "color"
+          ],
+          "threshold": 0.7
+        }
+      },
+      "output": "attribute_result"
+    },
+    {
+      "workflow_id": "WF006",
+      "step": "group likely duplicates",
+      "tool": "find_duplicates",
+      "params": {
+        "args": [
+          "$normalized"
+        ],
+        "kwargs": {
+          "key_fields": [
+            "sku"
+          ],
+          "similarity_fields": [
+            "name",
+            "category",
+            "brand",
+            "color"
+          ],
+          "threshold": 0.7
+        }
+      },
+      "output": "duplicates"
+    },
+    {
+      "workflow_id": "WF006",
+      "step": "assign confidence",
+      "tool": "find_duplicates",
+      "params": {
+        "args": [
+          "$normalized"
+        ],
+        "kwargs": {
+          "key_fields": [
+            "sku"
+          ],
+          "similarity_fields": [
+            "name",
+            "category",
+            "brand",
+            "color"
+          ],
+          "threshold": 0.7
+        }
+      },
+      "output": "groups"
+    },
+    {
+      "workflow_id": "WF008",
+      "step": "Read keywords",
+      "tool": "read_csv",
+      "params": {
+        "kwargs": {
+          "path": "data/mock/keywords.csv"
+        }
+      },
+      "output": "keyword_rows"
+    },
+    {
+      "workflow_id": "WF008",
+      "step": "remove duplicates",
+      "tool": "dedupe_rows",
+      "params": {
+        "args": [
+          "$keyword_rows"
+        ],
+        "kwargs": {
+          "key_field": "keyword"
+        }
+      },
+      "output": "keywords"
+    },
+    {
+      "workflow_id": "WF008",
+      "step": "classify search intent",
+      "tool": "classify_labels",
+      "params": {
+        "args": [
+          "$keywords",
+          [
+            {
+              "label": "navigational",
+              "matches": [
+                {
+                  "field": "keyword",
+                  "pattern": "near"
+                },
+                {
+                  "field": "keyword",
+                  "pattern": "track"
+                },
+                {
+                  "field": "keyword",
+                  "pattern": "login"
+                },
+                {
+                  "field": "keyword",
+                  "pattern": "hours"
+                }
+              ]
+            },
+            {
+              "label": "transactional",
+              "matches": [
+                {
+                  "field": "keyword",
+                  "pattern": "buy"
+                },
+                {
+                  "field": "keyword",
+                  "pattern": "order"
+                },
+                {
+                  "field": "keyword",
+                  "pattern": "cart"
+                },
+                {
+                  "field": "keyword",
+                  "pattern": "checkout"
+                },
+                {
+                  "field": "keyword",
+                  "pattern": "refund"
+                }
+              ]
+            },
+            {
+              "label": "commercial",
+              "matches": [
+                {
+                  "field": "keyword",
+                  "pattern": "best"
+                },
+                {
+                  "field": "keyword",
+                  "pattern": "cheap"
+                },
+                {
+                  "field": "keyword",
+                  "pattern": "compare"
+                },
+                {
+                  "field": "keyword",
+                  "pattern": "under"
+                },
+                {
+                  "field": "keyword",
+                  "pattern": "review"
+                }
+              ]
+            },
+            {
+              "label": "informational",
+              "matches": []
+            }
+          ],
+          "intent"
+        ]
+      },
+      "output": "classified"
+    },
+    {
+      "workflow_id": "WF008",
+      "step": "map keywords to categories",
+      "tool": "classify_labels",
+      "params": {
+        "args": [
+          "$classified",
+          [
+            {
+              "label": "Espresso",
+              "matches": [
+                {
+                  "field": "category",
+                  "pattern": "espresso"
+                }
+              ]
+            },
+            {
+              "label": "Coffee Machines",
+              "matches": [
+                {
+                  "field": "category",
+                  "pattern": "machine"
+                }
+              ]
+            },
+            {
+              "label": "Coffee Shops",
+              "matches": [
+                {
+                  "field": "category",
+                  "pattern": "shop"
+                }
+              ]
+            },
+            {
+              "label": "Order Support",
+              "matches": [
+                {
+                  "field": "category",
+                  "pattern": "order"
+                }
+              ]
+            },
+            {
+              "label": "Coffee",
+              "matches": []
+            }
+          ],
+          "category"
+        ]
+      },
+      "output": "mapped"
+    },
+    {
+      "workflow_id": "WF008",
+      "step": "identify high-priority keywords",
+      "tool": "tag_rows",
+      "params": {
+        "args": [
+          "$mapped",
+          {
+            "op": "or",
+            "rules": [
+              {
+                "op": "in",
+                "left": {
+                  "field": "intent"
+                },
+                "values": [
+                  "transactional",
+                  "commercial"
+                ]
+              },
+              {
+                "op": "ge",
+                "left": {
+                  "field": "search_volume"
+                },
+                "right": {
+                  "value": 1500
+                }
+              }
+            ]
+          },
+          "priority",
+          "high",
+          "normal"
+        ]
+      },
+      "output": "prioritized"
+    },
+    {
+      "workflow_id": "WF008",
+      "step": "export results",
+      "tool": "classify_labels",
+      "params": {
+        "args": [
+          "$prioritized",
+          [
+            {
+              "label": "/collections/espresso",
+              "matches": [
+                {
+                  "field": "category",
+                  "pattern": "espresso"
+                }
+              ]
+            },
+            {
+              "label": "/collections/coffee-makers",
+              "matches": [
+                {
+                  "field": "category",
+                  "pattern": "machine"
+                }
+              ]
+            },
+            {
+              "label": "/stores",
+              "matches": [
+                {
+                  "field": "category",
+                  "pattern": "shop"
+                }
+              ]
+            },
+            {
+              "label": "/help/order-status",
+              "matches": [
+                {
+                  "field": "category",
+                  "pattern": "order"
+                }
+              ]
+            },
+            {
+              "label": "/collections/coffee",
+              "matches": []
+            }
+          ],
+          "target_page"
+        ]
+      },
+      "output": "report"
+    },
+    {
+      "workflow_id": "WF004",
+      "step": "Validate required attributes",
+      "tool": "require_fields",
+      "params": {
+        "kwargs": {
+          "name": "$name",
+          "category": "$category"
+        }
+      },
+      "output": "validated"
+    },
+    {
+      "workflow_id": "WF004",
+      "step": "create product description",
+      "tool": "llm_generate",
+      "params": {
+        "args": [
+          "You are an e-commerce copywriter. Write accurate, descriptive product content from the product information provided.",
+          "Create the requested product description for the product described in the Product information.",
+          [
+            "product_description"
+          ]
+        ],
+        "kwargs": {
+          "name": "$name",
+          "category": "$category",
+          "attributes": "$attributes",
+          "material": "$material",
+          "color": "$color",
+          "target_audience": "$target_audience"
+        }
+      },
+      "output": "pd_step"
+    },
+    {
+      "workflow_id": "WF004",
+      "step": "generate short description",
+      "tool": "llm_generate",
+      "params": {
+        "args": [
+          "You are an e-commerce copywriter. Write concise, accurate product content from the product information provided.",
+          "Create a short product description for the product described in the Product information.",
+          [
+            "short_description"
+          ]
+        ],
+        "kwargs": {
+          "name": "$name",
+          "category": "$category",
+          "attributes": "$attributes",
+          "material": "$material",
+          "color": "$color",
+          "target_audience": "$target_audience"
+        }
+      },
+      "output": "sd_step"
+    },
+    {
+      "workflow_id": "WF004",
+      "step": "generate SEO title",
+      "tool": "llm_generate",
+      "params": {
+        "args": [
+          "You are an SEO specialist writing product titles.",
+          "Create an SEO title for the product described in the Product information.",
+          [
+            "seo_title"
+          ]
+        ],
+        "kwargs": {
+          "name": "$name",
+          "category": "$category",
+          "attributes": "$attributes",
+          "material": "$material",
+          "color": "$color",
+          "target_audience": "$target_audience"
+        }
+      },
+      "output": "seo_step"
+    },
+    {
+      "workflow_id": "WF004",
+      "step": "generate meta description",
+      "tool": "generate_report",
+      "params": {
+        "args": [
+          "You are an e-commerce copywriter writing product metadata.",
+          "Create a meta description for the product using the surrounding product content.",
+          [
+            "meta_description"
+          ]
+        ],
+        "kwargs": {
+          "product_description": "$pd_step",
+          "short_description": "$sd_step",
+          "seo_title": "$seo_step"
+        }
+      },
+      "output": "meta_step"
+    },
+    {
+      "workflow_id": "WF007",
+      "step": "Validate inputs",
+      "tool": "require_fields",
+      "params": {
+        "kwargs": {
+          "goal": "$goal",
+          "dates": "$dates"
+        }
+      },
+      "output": "validated"
+    },
+    {
+      "workflow_id": "WF007",
+      "step": "identify campaign objective",
+      "tool": "llm_generate",
+      "params": {
+        "args": [
+          "You are a marketing strategist.",
+          "Define the campaign objective for the goal provided.",
+          [
+            "objective"
+          ]
+        ],
+        "kwargs": {
+          "goal": "$goal",
+          "audience": "$audience",
+          "dates": "$dates",
+          "promotion": "$promotion"
+        }
+      },
+      "output": "objective_step"
+    },
+    {
+      "workflow_id": "WF007",
+      "step": "summarize products",
+      "tool": "summarize_products",
+      "params": {
+        "args": [
+          "$products"
+        ],
+        "kwargs": {
+          "name_field": "name"
+        }
+      },
+      "output": "products_step"
+    },
+    {
+      "workflow_id": "WF007",
+      "step": "create messaging",
+      "tool": "llm_generate",
+      "params": {
+        "args": [
+          "You are a marketing copywriter.",
+          "Write campaign messaging for the audience and objective provided.",
+          [
+            "messaging"
+          ]
+        ],
+        "kwargs": {
+          "goal": "$goal",
+          "audience": "$audience",
+          "dates": "$dates",
+          "promotion": "$promotion"
+        }
+      },
+      "output": "messaging_step"
+    },
+    {
+      "workflow_id": "WF007",
+      "step": "create channel recommendations",
+      "tool": "llm_generate",
+      "params": {
+        "args": [
+          "You are a digital marketing channel planner.",
+          "Recommend marketing channels for this campaign.",
+          [
+            "channels"
+          ]
+        ],
+        "kwargs": {
+          "goal": "$goal",
+          "audience": "$audience",
+          "dates": "$dates",
+          "promotion": "$promotion"
+        }
+      },
+      "output": "channels_step"
+    },
+    {
+      "workflow_id": "WF007",
+      "step": "create campaign checklist",
+      "tool": "generate_report",
+      "params": {
+        "args": [
+          "You are a campaign manager.",
+          "Create an actionable campaign checklist.",
+          [
+            "checklist"
+          ]
+        ],
+        "kwargs": {
+          "objective": "$objective_step",
+          "goal": "$goal",
+          "audience": "$audience",
+          "timeline": "$dates",
+          "product_summary": "$products_step",
+          "messaging": "$messaging_step",
+          "channels": "$channels_step",
+          "promotion": "$promotion"
+        }
+      },
+      "output": "brief"
+    },
+    {
+      "workflow_id": "WF009",
+      "step": "Understand task requirements",
+      "tool": "require_fields",
+      "params": {
+        "kwargs": {
+          "task": "$task",
+          "priority": "$priority",
+          "deadline": "$deadline",
+          "required_skills": "$required_skills"
+        }
+      },
+      "output": "requirements"
+    },
+    {
+      "workflow_id": "WF009",
+      "step": "compare employee skills",
+      "tool": "match_skills",
+      "params": {
+        "args": [
+          "$employees",
+          "$required_skills"
+        ],
+        "kwargs": {
+          "skill_field": "skills"
+        }
+      },
+      "output": "matched"
+    },
+    {
+      "workflow_id": "WF009",
+      "step": "check current workload",
+      "tool": "check_capacity",
+      "params": {
+        "args": [
+          "$matched"
+        ],
+        "kwargs": {
+          "workload_field": "workload",
+          "capacity_field": "capacity"
+        }
+      },
+      "output": "capacity"
+    },
+    {
+      "workflow_id": "WF009",
+      "step": "rank candidates",
+      "tool": "rank",
+      "params": {
+        "args": [
+          "$capacity",
+          [
+            {
+              "field": "skill_match_fraction",
+              "weight": 10
+            },
+            {
+              "field": "available_capacity",
+              "weight": 1
+            }
+          ]
+        ]
+      },
+      "output": "ranked"
+    },
+    {
+      "workflow_id": "WF009",
+      "step": "select employee",
+      "tool": "select_best",
+      "params": {
+        "args": [
+          "$ranked"
+        ]
+      },
+      "output": "selection"
+    },
+    {
+      "workflow_id": "WF009",
+      "step": "generate assignment summary",
+      "tool": "generate_report",
+      "params": {
+        "args": [
+          "You are a team lead compiling an assignment summary.",
+          "Produce an assignment summary and reasoning for the recommended employee.",
+          [
+            "task_summary",
+            "reasoning"
+          ]
+        ],
+        "kwargs": {
+          "task": "$task",
+          "priority": "$priority",
+          "deadline": "$deadline",
+          "required_skills": "$required_skills",
+          "selection": "$selection"
+        }
+      },
+      "output": "summary"
+    },
+    {
+      "workflow_id": "WF005",
+      "step": "Validate identifier",
+      "tool": "require_any",
+      "params": {
+        "kwargs": {
+          "order_id": "$order_id",
+          "customer_email": "$customer_email"
+        }
+      },
+      "output": "identifier"
+    },
+    {
+      "workflow_id": "WF005",
+      "step": "search order data",
+      "tool": "find_rows",
+      "params": {
+        "args": [
+          "data/mock/orders.csv"
+        ],
+        "kwargs": {
+          "order_id": "$order_id",
+          "customer_email": "$customer_email"
+        }
+      },
+      "output": "matches"
+    },
+    {
+      "workflow_id": "WF005",
+      "step": "retrieve order status",
+      "tool": "first_record",
+      "params": {
+        "args": [
+          "$matches"
+        ],
+        "kwargs": {
+          "not_found_message": "No order found. Please provide another order ID or customer email."
+        }
+      },
+      "output": "order"
+    },
+    {
+      "workflow_id": "WF005",
+      "step": "retrieve shipment information",
+      "tool": "attach_lookup",
+      "params": {
+        "args": [
+          "$order",
+          "data/mock/shipments.csv"
+        ],
+        "kwargs": {
+          "left_on": "shipment_id",
+          "right_on": "shipment_id"
+        }
+      },
+      "output": "order_with_shipment"
+    },
+    {
+      "workflow_id": "WF005",
+      "step": "summarize current status",
+      "tool": "summarize_record",
+      "params": {
+        "args": [
+          "$order_with_shipment",
+          [
+            "order_id",
+            "items",
+            "order_status",
+            "shipment_status"
+          ],
+          [
+            "tracking_number"
+          ]
+        ]
+      },
+      "output": "status"
+    },
+    {
+      "workflow_id": "WF010",
+      "step": "Load execution logs",
+      "tool": "read_csv",
+      "params": {
+        "kwargs": {
+          "path": "$logs_path"
+        }
+      },
+      "output": "logs"
+    },
+    {
+      "workflow_id": "WF010",
+      "step": "calculate success/failure rate",
+      "tool": "group_metrics",
+      "params": {
+        "args": [
+          "$logs"
+        ],
+        "kwargs": {
+          "group_field": "workflow_id",
+          "status_field": "status",
+          "success_value": "success"
+        }
+      },
+      "output": "metrics"
+    },
+    {
+      "workflow_id": "WF010",
+      "step": "calculate average execution time",
+      "tool": "with_averages",
+      "params": {
+        "args": [
+          "$metrics",
+          "$logs"
+        ],
+        "kwargs": {
+          "group_field": "workflow_id",
+          "time_field": "execution_time_s"
+        }
+      },
+      "output": "metrics_with_time"
+    },
+    {
+      "workflow_id": "WF010",
+      "step": "identify frequent errors",
+      "tool": "frequent_errors",
+      "params": {
+        "args": [
+          "$logs"
+        ],
+        "kwargs": {
+          "error_field": "error",
+          "min_count": 2
+        }
+      },
+      "output": "error_report"
+    },
+    {
+      "workflow_id": "WF010",
+      "step": "identify slow steps",
+      "tool": "slow_steps",
+      "params": {
+        "args": [
+          "$logs"
+        ],
+        "kwargs": {
+          "step_field": "slowest_step",
+          "time_field": "execution_time_s",
+          "min_average": 10.0
+        }
+      },
+      "output": "slow_report"
+    },
+    {
+      "workflow_id": "WF010",
+      "step": "generate recommendations",
+      "tool": "build_report",
+      "params": {
+        "args": [
+          "$metrics_with_time",
+          "$error_report",
+          "$slow_report"
+        ],
+        "kwargs": {
+          "rule": {
+            "op": "or",
+            "rules": [
+              {
+                "op": "gt",
+                "left": {
+                  "field": "failure_rate"
+                },
+                "right": {
+                  "value": 0.10
+                }
+              },
+              {
+                "op": "gt",
+                "left": {
+                  "field": "average_time_s"
+                },
+                "right": {
+                  "value": 10.0
+                }
+              }
+            ]
+          },
+          "failure_threshold": 0.10,
+          "time_threshold": 10.0
+        }
+      },
+      "output": "report"
+    }
+  ]
+}

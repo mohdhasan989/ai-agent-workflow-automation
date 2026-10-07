@@ -1,0 +1,199 @@
+{
+  "decisions": [
+    {
+      "workflow_id": "WF001",
+      "step": "identify low-stock products",
+      "name": "restock_check",
+      "rule": {
+        "op": "lt",
+        "left": {
+          "field": "stock_diff"
+        },
+        "right": {
+          "value": 0
+        }
+      },
+      "data": "$compared",
+      "message": "{count} of {total} products marked for restock"
+    },
+    {
+      "workflow_id": "WF002",
+      "step": "flag exceptions",
+      "name": "exception_check",
+      "rule": {
+        "op": "gt",
+        "left": {
+          "field": "pct_diff"
+        },
+        "right": {
+          "value": 10
+        }
+      },
+      "data": "$with_diffs",
+      "message": "{count} of {total} products flagged as price exceptions"
+    },
+    {
+      "workflow_id": "WF003",
+      "step": "identify invalid rows",
+      "name": "invalid_rows_check",
+      "rule": {
+        "op": "or",
+        "rules": [
+          {
+            "op": "missing",
+            "left": {
+              "field": "sku"
+            }
+          },
+          {
+            "op": "missing",
+            "left": {
+              "field": "name"
+            }
+          }
+        ]
+      },
+      "data": "$rows",
+      "message": "{count} of {total} rows missing SKU or product name"
+    },
+    {
+      "workflow_id": "WF006",
+      "step": "group likely duplicates",
+      "name": "definite_duplicate_check",
+      "rule": {
+        "op": "eq",
+        "left": {
+          "field": "type"
+        },
+        "right": {
+          "value": "definite"
+        }
+      },
+      "data": "$duplicates",
+      "message": "{count} of {total} groups are definite duplicates"
+    },
+    {
+      "workflow_id": "WF006",
+      "step": "assign confidence",
+      "name": "possible_duplicate_check",
+      "rule": {
+        "op": "eq",
+        "left": {
+          "field": "type"
+        },
+        "right": {
+          "value": "possible"
+        }
+      },
+      "data": "$groups",
+      "message": "{count} of {total} groups are possible duplicates"
+    },
+    {
+      "workflow_id": "WF008",
+      "step": "classify search intent",
+      "name": "intent_coverage",
+      "rule": {
+        "op": "in",
+        "left": {
+          "field": "intent"
+        },
+        "values": [
+          "informational",
+          "commercial",
+          "transactional",
+          "navigational"
+        ]
+      },
+      "data": "$classified",
+      "message": "{count} of {total} keywords classified into a recognized intent"
+    },
+    {
+      "workflow_id": "WF004",
+      "step": "generate meta description",
+      "name": "content_complete",
+      "rule": {
+        "op": "eq",
+        "left": {
+          "field": "product_description"
+        },
+        "right": {
+          "value": "Information missing."
+        }
+      },
+      "data": "$meta_step",
+      "message": "{count} of {total} content fields marked as missing"
+    },
+    {
+      "workflow_id": "WF007",
+      "step": "create campaign checklist",
+      "name": "brief_complete",
+      "rule": {
+        "op": "exists",
+        "left": {
+          "field": "checklist"
+        }
+      },
+      "data": "$brief",
+      "message": "campaign brief includes a checklist"
+    },
+    {
+      "workflow_id": "WF009",
+      "step": "select employee",
+      "name": "candidate_fit",
+      "rule": {
+        "op": "gt",
+        "left": {
+          "field": "score"
+        },
+        "right": {
+          "value": 0
+        }
+      },
+      "data": "$ranked",
+      "message": "{count} of {total} candidates fit the assignment"
+    },
+    {
+      "workflow_id": "WF005",
+      "step": "search order data",
+      "name": "order_match",
+      "rule": {
+        "op": "exists",
+        "left": {
+          "field": "order_id"
+        }
+      },
+      "data": "$matches",
+      "message": "{count} of {total} orders matched the provided identifier"
+    },
+    {
+      "workflow_id": "WF010",
+      "step": "calculate average execution time",
+      "name": "workflow_flag",
+      "rule": {
+        "op": "or",
+        "rules": [
+          {
+            "op": "gt",
+            "left": {
+              "field": "failure_rate"
+            },
+            "right": {
+              "value": 0.10
+            }
+          },
+          {
+            "op": "gt",
+            "left": {
+              "field": "average_time_s"
+            },
+            "right": {
+              "value": 10.0
+            }
+          }
+        ]
+      },
+      "data": "$metrics_with_time",
+      "message": "{count} of {total} workflows flagged for review"
+    }
+  ]
+}

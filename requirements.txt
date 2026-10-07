@@ -1,0 +1,6 @@
+openpyxl
+pytest
+fastapi
+uvicorn
+httpx
+pydantic

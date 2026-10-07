@@ -1,0 +1,4 @@
+order_id,customer_email,items,order_status,shipment_id
+ORD-1001,alice@example.com,Ceramic Mug; Pour-Over Kettle,shipped,SHP-001
+ORD-1002,bob@example.com,Espresso Machine,processing,SHP-002
+ORD-1003,carol@example.com,Coffee Grinder,pending,SHP-003
