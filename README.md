@@ -21,23 +21,51 @@
 ## How It Works
 
 ```
-User Request
-↓
-FastAPI
-↓
-Agent + LLM
-↓
-Workflow Selection
-↓
-Workflow Registry
-↓
-Workflow Engine
-↓
-Tool Registry
-↓
-Tools + Decisions
-↓
-Final Result
+┌──────────────────────┐
+│    User Request      │
+└──────────┬───────────┘
+           ↓
+┌──────────────────────┐
+│   FastAPI Endpoint   │
+└──────────┬───────────┘
+           ↓
+┌──────────────────────┐
+│     AI Agent + LLM   │
+│   Workflow Selection │
+└──────────┬───────────┘
+           ↓
+┌──────────────────────┐
+│  Workflow Registry   │
+│   Excel Definitions  │
+└──────────┬───────────┘
+           ↓
+┌──────────────────────┐
+│   Workflow Engine    │
+│  Executes Steps in   │
+│    Defined Order     │
+└──────────┬───────────┘
+           ↓
+┌──────────────────────┐
+│     Tool Registry    │
+│  Reusable Tools +    │
+│     Decisions        │
+└──────────┬───────────┘
+           ↓
+┌──────────────────────┐
+│     Final Result     │
+│ Steps + Decisions +  │
+│      Output          │
+└──────────────────────┘
+
+Workflow Execution
+Each workflow follows the same execution architecture:
+Excel Definition → Workflow Selection → Engine Execution → Tool Execution → Decision Evaluation → Final Result
+- Excel — Stores workflow definitions, steps, inputs, tools, and decision logic.
+- AI Agent — Understands the user request and selects the appropriate workflow.
+- Workflow Engine — Executes the selected workflow step by step.
+- Tool Registry — Provides reusable tools for file processing, calculations, validation, LLM tasks, ranking, reporting, and lookups.
+- Decisions — Evaluates workflow-specific conditions and handles exceptions.
+- Final Result — Returns the workflow output along with executed steps and decision results.Result
 ```
 
 - **FastAPI** — HTTP API that receives the user request.
