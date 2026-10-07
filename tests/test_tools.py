@@ -5,6 +5,7 @@ from agent_workflow.tools import (
     ToolRegistry,
     build_default_registry,
 )
+from agent_workflow.tools.aggregate import count_groups, group_rows, report_counts
 from agent_workflow.tools.assign import (
     check_capacity,
     match_skills,
@@ -79,6 +80,9 @@ def test_default_registry_has_all_foundational_tools():
         "frequent_errors",
         "slow_steps",
         "build_report",
+        "group_rows",
+        "count_groups",
+        "report_counts",
     }
 
 
@@ -374,3 +378,36 @@ def test_build_report_flags_and_recommends():
     assert any("failure rate" in r for r in report["recommendations"])
     assert any("TimeoutError" in r for r in report["recommendations"])
     assert any("transform" in r for r in report["recommendations"])
+
+
+def test_group_rows_preserves_order_and_skips_blank_keys():
+    rows = [
+        {"name": "A", "category": "Espresso"},
+        {"name": "B", "category": "Espresso"},
+        {"name": "C", "category": "Drip"},
+        {"name": "D", "category": ""},
+    ]
+    groups = group_rows(rows, "category")
+    assert [g["key"] for g in groups] == ["Espresso", "Drip"]
+    assert len(groups[0]["rows"]) == 2
+
+
+def test_count_groups_counts_and_sorts_descending():
+    groups = [
+        {"key": "Espresso", "rows": [{}, {}]},
+        {"key": "Drip", "rows": [{}, {}, {}]},
+        {"key": "Beans", "rows": [{}]},
+    ]
+    counts = count_groups(groups)
+    assert counts == [{"key": "Drip", "count": 3}, {"key": "Espresso", "count": 2}, {"key": "Beans", "count": 1}]
+
+
+def test_report_counts_marks_empty():
+    assert report_counts([])["empty"] is True
+    assert "No rows" in report_counts([])["message"]
+    assert report_counts([{"key": "Coffee", "count": 4}]) == {
+        "counts": [{"key": "Coffee", "count": 4}],
+        "total_groups": 1,
+        "empty": False,
+        "message": None,
+    }

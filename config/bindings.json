@@ -1127,6 +1127,51 @@
         }
       },
       "output": "report"
+    },
+    {
+      "workflow_id": "WF011",
+      "step": "Load products",
+      "tool": "read_csv",
+      "params": {
+        "kwargs": {
+          "path": "$products_path"
+        }
+      },
+      "output": "products"
+    },
+    {
+      "workflow_id": "WF011",
+      "step": "Group products by category",
+      "tool": "group_rows",
+      "params": {
+        "args": [
+          "$products",
+          "category"
+        ]
+      },
+      "output": "groups"
+    },
+    {
+      "workflow_id": "WF011",
+      "step": "Count products in each category",
+      "tool": "count_groups",
+      "params": {
+        "args": [
+          "$groups"
+        ]
+      },
+      "output": "counts"
+    },
+    {
+      "workflow_id": "WF011",
+      "step": "Generate category count report",
+      "tool": "report_counts",
+      "params": {
+        "args": [
+          "$counts"
+        ]
+      },
+      "output": "report"
     }
   ]
 }

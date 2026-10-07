@@ -1,4 +1,5 @@
 from .assign import check_capacity, match_skills, require_fields, select_best, summarize_products
+from .aggregate import count_groups, group_rows, report_counts
 from .calc import calculate
 from .classify import classify_labels, tag_rows
 from .duplicates import find_duplicates
@@ -56,6 +57,9 @@ _DEFAULT_TOOLS = [
     ("frequent_errors", frequent_errors),
     ("slow_steps", slow_steps),
     ("build_report", build_report),
+    ("group_rows", group_rows),
+    ("count_groups", count_groups),
+    ("report_counts", report_counts),
 ]
 
 

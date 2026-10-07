@@ -194,6 +194,19 @@
       },
       "data": "$metrics_with_time",
       "message": "{count} of {total} workflows flagged for review"
+    },
+    {
+      "workflow_id": "WF011",
+      "step": "Load products",
+      "name": "products_loaded",
+      "rule": {
+        "op": "exists",
+        "left": {
+          "field": "category"
+        }
+      },
+      "data": "$products",
+      "message": "{count} of {total} products loaded"
     }
   ]
 }
