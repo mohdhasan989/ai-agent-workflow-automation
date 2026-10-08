@@ -1,8 +1,11 @@
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel, Field, field_validator
+from dotenv import load_dotenv
 
 from .agent import AgentError
 from .service import AgentService
+
+load_dotenv(override=True)
 
 app = FastAPI(title="AI Agent Workflow Automation")
 

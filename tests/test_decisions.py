@@ -113,6 +113,14 @@ def test_wf002_decision_evaluated_by_engine():
     assert decision.rule == "gt"
     assert decision.result is True
     assert decision.message == "2 of 4 products flagged as price exceptions"
+    assert decision.values["left"] > decision.values["right"]
+
+
+def test_values_come_from_matching_record():
+    rows = [{"value": 4}, {"value": 12}]
+    outcome = evaluator.evaluate({"op": "gt", "left": {"field": "value"}, "right": {"value": 10}}, rows)
+    assert outcome["result"] is True
+    assert outcome["values"] == {"left": 12, "right": 10}
 
 
 def test_invalid_decision_operator_fails_step():

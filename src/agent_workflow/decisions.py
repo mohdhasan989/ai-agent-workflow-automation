@@ -37,10 +37,11 @@ class DecisionEvaluator:
         for record in records:
             record = record if isinstance(record, dict) else {}
             is_match, record_values = self._matches(rule, record)
+            if not is_match:
+                continue
+            matched.append(record)
             if not values:
                 values = record_values
-            if is_match:
-                matched.append(record)
         return {
             "result": bool(matched),
             "matched": matched,
